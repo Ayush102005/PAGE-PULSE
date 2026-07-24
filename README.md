@@ -41,9 +41,9 @@ Three test suites run in sequence (no network calls required):
 
 | Suite | File | Coverage |
 |-------|------|----------|
-| HTML Parser | `tests/audit.test.js` | 8 tests — happy path + 3 typed failures |
-| URL Validator | `tests/validator.test.js` | 9 tests — valid / invalid inputs |
-| API Integration | `tests/api.test.js` | 3 tests — health check + validation errors |
+| HTML Parser | `tests/audit.test.js` | 10 tests — happy path, edge cases (no-body, no-images), + 3 typed failures |
+| URL Validator | `tests/validator.test.js` | 16 tests — valid inputs, malformed, SSRF ranges, scheme-blocking |
+| API Integration | `tests/api.test.js` | 11 tests — health check, POST validation, GET endpoint, SSRF rejection |
 
 ---
 
@@ -65,6 +65,14 @@ Content-Type: application/json
 ```
 
 > The `https://` protocol prefix is optional — it is auto-prepended if absent.
+
+### `GET /api/audit?url=...`
+
+Convenience variant — identical report, ideal for `curl`, browser testing, or shareable links.
+
+```bash
+curl "https://page-pulse-lime.vercel.app/api/audit?url=example.com"
+```
 
 **Success Response** `200 OK`
 
@@ -90,6 +98,7 @@ Content-Type: application/json
 | Status | Condition | Example `error` message |
 |--------|-----------|------------------------|
 | `400`  | Missing or invalid URL | `"Invalid URL format provided."` |
+| `400`  | Private/loopback address (SSRF guard) | `"Requests to private or loopback addresses are not allowed."` |
 | `400`  | DNS resolution failure | `"Domain name could not be resolved."` |
 | `408`  | Request timed out (> 8 s) | `"Request timed out after 8 seconds."` |
 | `415`  | Response is not HTML | `"URL returned non-HTML content (application/json)."` |
@@ -143,9 +152,18 @@ The original code returned `540` — a non-standard code invented in-house. Usin
 
 **Reasoning:**  
 Keeping validation logic inside the route handler means it is impossible to unit-test without spinning up an Express server (and mocking `axios`). By extracting it to a pure function `isValidUrl(rawUrl) → { valid, normalized, error }`, we get:
-- **Testability:** `validator.test.js` tests it with 9 cases using no HTTP layer at all.
+- **Testability:** `validator.test.js` tests it with 16 cases using no HTTP layer at all.
 - **Reusability:** If we add a `GET /api/audit?url=` query-param variant, the same function is called with zero duplication.
 - **Single Responsibility:** `server.js` orchestrates; `validator.js` validates; `parser.js` parses. Each module has exactly one job.
+
+---
+
+### 4 — SSRF Protection in the Validator Layer
+
+**Decision:** URL validation rejects requests to private/loopback network addresses before any HTTP fetch is attempted.
+
+**Reasoning:**  
+Without this guard, anyone could POST `{ "url": "http://192.168.1.1/admin" }` and use Page Pulse as a proxy to scan internal infrastructure. The fix is a small but critical security control: `isPrivateHost()` checks the parsed hostname against all RFC-1918 private ranges (10.x, 172.16-31.x, 192.168.x), loopback (127.x, `localhost`), link-local (169.254.x), and IPv6 equivalents — and returns a 400 before any network socket is opened. The check lives in `validator.js` rather than `server.js` so it is independently unit-testable with dedicated SSRF test cases.
 
 ---
 
@@ -177,6 +195,8 @@ page-pulse/
 2. **Result caching** — Auditing the same URL twice in 60 seconds returns stale data at the cost of another round-trip. A Redis-backed cache (or even an in-process LRU with a 60-second TTL) would halve response time for repeat requests and reduce rate-limiting risk on popular targets.
 
 3. **Headless "deep scan" option** — A `?mode=deep` flag that spawns a Puppeteer instance for JavaScript-rendered pages. This would let the tool audit SPAs (React, Vue, Angular apps) that render all their HTML client-side — currently invisible to Cheerio.
+
+4. **DNS-level SSRF re-check** — The current SSRF guard checks the hostname string before the fetch. A determined attacker could use a domain they control that resolves to a private IP (DNS rebinding). A production-grade fix would also verify the resolved IP after DNS lookup, before the TCP connection is made.
 
 ---
 

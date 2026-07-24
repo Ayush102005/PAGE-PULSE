@@ -82,6 +82,21 @@ describe('parseHtml — happy path', () => {
     expect(result.imagesMissingAlt).toBe(0);
   });
 
+  test('handles HTML with no <body> tag (counts words from root)', () => {
+    // Malformed / fragment HTML — no wrapping <body>
+    const html = '<h1>Title</h1><p>Three more words</p>';
+    const result = parseHtml(html);
+    // Should not throw, word count should be > 0
+    expect(result.approximateWordCount).toBeGreaterThan(0);
+    expect(result.h1Count).toBe(1);
+  });
+
+  test('returns zero imagesMissingAlt when there are no images', () => {
+    const html = '<html><body><p>No images here at all.</p></body></html>';
+    const result = parseHtml(html);
+    expect(result.imagesMissingAlt).toBe(0);
+  });
+
 });
 
 describe('parseHtml — failure cases', () => {

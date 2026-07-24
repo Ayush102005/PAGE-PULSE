@@ -45,18 +45,22 @@ function parseHtml(htmlContent) {
     }
   });
 
-  // ── Word count (strip non-content nodes first) ────────────────────────────
-  $('script, style, noscript, svg, iframe').remove();
-  const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
-  const approximateWordCount = bodyText
-    ? bodyText.split(' ').filter(word => word.length > 0).length
-    : 0;
-
-  // ── Extended SEO signals ──────────────────────────────────────────────────
+  // ── Extended SEO signals ──────────────────────────────────────────────────────
+  // IMPORTANT: read these BEFORE removing <head> in the word-count cleanup step
   const canonical = $('link[rel="canonical"]').attr('href')?.trim() || 'N/A';
   const ogTitle = $('meta[property="og:title"]').attr('content')?.trim() || 'N/A';
   const ogDescription = $('meta[property="og:description"]').attr('content')?.trim() || 'N/A';
   const robotsMeta = $('meta[name="robots"]').attr('content')?.trim() || 'N/A';
+
+  // ── Word count (strip non-content nodes first) ────────────────────────────
+  // Remove <head> here (after SEO reads) to exclude title/meta text from word count
+  $('script, style, noscript, svg, iframe, head').remove();
+  // Use <body> if present; fall back to the whole document for malformed HTML
+  const rawText = ($('body').length ? $('body') : $.root()).text();
+  const bodyText = rawText.replace(/\s+/g, ' ').trim();
+  const approximateWordCount = bodyText
+    ? bodyText.split(' ').filter(word => word.length > 0).length
+    : 0;
 
   return {
     title,
