@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Pulse — Web Audit Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>⚡ Page Pulse</h1>
+      <p>Instant webpage auditing & technical SEO inspection</p>
+    </header>
+
+    <main>
+      <form id="auditForm">
+        <input type="text" id="urlInput" placeholder="Enter URL (e.g., example.com)" required />
+        <button type="submit" id="submitBtn">Audit Page</button>
+      </form>
+
+      <div id="statusMessage" class="hidden"></div>
+
+      <div id="resultsCard" class="card hidden">
+        <h2>Audit Results</h2>
+        <div class="grid">
+          <div class="metric"><span class="label">Status Code</span><span id="httpStatus" class="val"></span></div>
+          <div class="metric"><span class="label">Response Time</span><span id="responseTime" class="val"></span></div>
+          <div class="metric"><span class="label">H1 Tags</span><span id="h1Count" class="val"></span></div>
+          <div class="metric"><span class="label">Missing Alt Images</span><span id="imagesMissingAlt" class="val"></span></div>
+          <div class="metric"><span class="label">Word Count</span><span id="wordCount" class="val"></span></div>
+        </div>
+        <div class="detail-block">
+          <strong>Page Title:</strong> <p id="pageTitle"></p>
+        </div>
+        <div class="detail-block">
+          <strong>Meta Description:</strong> <p id="metaDescription"></p>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p><a href="https://digitalheroesco.com" target="_blank" rel="noopener noreferrer">Built for Digital Heroes Training Task</a></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
