@@ -3,44 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Page Pulse — Web Audit Tool</title>
+  <title>Page Pulse — Instant Web Audit Tool</title>
+  <meta name="description" content="Page Pulse audits any URL in seconds — check HTTP status, response time, title, meta description, H1 count, missing alt text, and word count.">
+  <meta property="og:title" content="Page Pulse — Instant Web Audit">
+  <meta property="og:description" content="Audit any webpage for SEO signals and technical health in one click.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- Animated background orbs -->
+  <div class="bg-orb bg-orb-1" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb-2" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb-3" aria-hidden="true"></div>
+
   <div class="container">
     <header>
-      <h1>⚡ Page Pulse</h1>
-      <p>Instant webpage auditing & technical SEO inspection</p>
+      <div class="logo-wrap">
+        <span class="logo-icon" aria-hidden="true">⚡</span>
+        <h1>Page Pulse</h1>
+      </div>
+      <p class="tagline">Instant webpage health &amp; SEO audit — powered by zero guesswork</p>
     </header>
 
     <main>
-      <form id="auditForm">
-        <input type="text" id="urlInput" placeholder="Enter URL (e.g., example.com)" required />
-        <button type="submit" id="submitBtn">Audit Page</button>
+      <form id="auditForm" autocomplete="off">
+        <div class="input-wrap">
+          <span class="input-icon" aria-hidden="true">🔗</span>
+          <input
+            type="text"
+            id="urlInput"
+            placeholder="Enter any URL  — e.g. github.com"
+            aria-label="URL to audit"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <button type="submit" id="submitBtn">
+          <span id="btnText">Audit Page</span>
+          <span id="btnSpinner" class="spinner hidden" aria-hidden="true"></span>
+        </button>
       </form>
+      <p class="hint">Press <kbd>Enter</kbd> to audit &bull; URL protocol is optional</p>
 
-      <div id="statusMessage" class="hidden"></div>
+      <!-- Status message (loading / error) -->
+      <div id="statusMessage" class="status-msg hidden" role="alert" aria-live="polite"></div>
 
-      <div id="resultsCard" class="card hidden">
-        <h2>Audit Results</h2>
-        <div class="grid">
-          <div class="metric"><span class="label">Status Code</span><span id="httpStatus" class="val"></span></div>
-          <div class="metric"><span class="label">Response Time</span><span id="responseTime" class="val"></span></div>
-          <div class="metric"><span class="label">H1 Tags</span><span id="h1Count" class="val"></span></div>
-          <div class="metric"><span class="label">Missing Alt Images</span><span id="imagesMissingAlt" class="val"></span></div>
-          <div class="metric"><span class="label">Word Count</span><span id="wordCount" class="val"></span></div>
+      <!-- Results card -->
+      <section id="resultsCard" class="card hidden" aria-label="Audit results">
+        <div class="card-header">
+          <div>
+            <h2>Audit Report</h2>
+            <p id="auditedUrl" class="audited-url"></p>
+          </div>
+          <button id="copyBtn" class="copy-btn" title="Copy JSON report" aria-label="Copy JSON report">
+            <span id="copyBtnText">⎘ Copy JSON</span>
+          </button>
         </div>
-        <div class="detail-block">
-          <strong>Page Title:</strong> <p id="pageTitle"></p>
+
+        <!-- Primary metric chips -->
+        <div class="metrics-grid" id="metricsGrid">
+          <div class="metric" id="m-status">
+            <span class="metric-label">HTTP Status</span>
+            <span class="metric-val" id="httpStatus"></span>
+          </div>
+          <div class="metric" id="m-time">
+            <span class="metric-label">Response Time</span>
+            <span class="metric-val" id="responseTime"></span>
+          </div>
+          <div class="metric" id="m-h1">
+            <span class="metric-label">H1 Tags</span>
+            <span class="metric-val" id="h1Count"></span>
+          </div>
+          <div class="metric" id="m-alt">
+            <span class="metric-label">Missing Alt</span>
+            <span class="metric-val" id="imagesMissingAlt"></span>
+          </div>
+          <div class="metric" id="m-words">
+            <span class="metric-label">Word Count</span>
+            <span class="metric-val" id="wordCount"></span>
+          </div>
         </div>
-        <div class="detail-block">
-          <strong>Meta Description:</strong> <p id="metaDescription"></p>
+
+        <!-- Detail rows -->
+        <div class="details">
+          <div class="detail-row">
+            <span class="detail-key">Page Title</span>
+            <span class="detail-val" id="pageTitle"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Meta Description</span>
+            <span class="detail-val" id="metaDescription"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Canonical URL</span>
+            <span class="detail-val" id="canonicalUrl"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">OG Title</span>
+            <span class="detail-val" id="ogTitle"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">OG Description</span>
+            <span class="detail-val" id="ogDescription"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Robots Meta</span>
+            <span class="detail-val" id="robotsMeta"></span>
+          </div>
         </div>
-      </div>
+      </section>
     </main>
 
     <footer>
-      <p><a href="https://digitalheroesco.com" target="_blank" rel="noopener noreferrer">Built for Digital Heroes Training Task</a></p>
+      <p>Built by <a href="https://github.com/Ayush102005" target="_blank" rel="noopener noreferrer">Ayush</a> &bull; <a href="https://github.com/Ayush102005/PAGE-PULSE" target="_blank" rel="noopener noreferrer">View Source</a></p>
     </footer>
   </div>
 
