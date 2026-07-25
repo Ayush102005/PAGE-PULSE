@@ -28,18 +28,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Content Security Policy — allows self-hosted assets and Vercel live previews
-app.use((req, res, next) => {
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' https://vercel.live; " +
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-    "font-src 'self' https://fonts.gstatic.com; " +
-    "img-src 'self' data: https:; connect-src 'self' https://vercel.live;"
-  );
-  next();
-});
-
 // Simple request logger
 app.use((req, res, next) => {
   const ts = new Date().toISOString();
